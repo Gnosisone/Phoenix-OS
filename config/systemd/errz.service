@@ -1,0 +1,18 @@
+[Unit]
+Description=ERR0RS ULTIMATE — AI Penetration Testing Assistant
+After=network.target ollama.service
+Wants=ollama.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/ERR0RS-Ultimate
+ExecStart=/usr/bin/python3 src/ui/errorz_launcher.py
+Restart=always
+RestartSec=5
+Environment=DISPLAY=:0
+Environment=PI5_MODE=true
+Environment=HAILO_ENABLED=true
+
+[Install]
+WantedBy=multi-user.target
