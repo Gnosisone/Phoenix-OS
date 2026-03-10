@@ -1,0 +1,10 @@
+requests
+fastapi
+uvicorn
+pydantic
+python-dotenv
+rich
+click
+psutil
+cryptography
+pyserial
