@@ -19,7 +19,7 @@ logger = logging.getLogger("PhoenixOS")
 
 PI5_MODE   = os.getenv("PI5_MODE",    "false").lower() == "true"
 HAILO_MODE = os.getenv("HAILO_ENABLED","false").lower() == "true"
-ERRZ_PATH  = os.getenv("ERRZ_PATH",   "/opt/ERR0RS-Ultimate")
+ERRZ_PATH  = os.getenv("ERRZ_PATH",   "/home/kali/ERR0RS-Ultimate")
 UI_PORT    = int(os.getenv("UI_PORT", "8765"))
 
 
@@ -39,6 +39,7 @@ class PhoenixSystem:
         self.wireless  = None
         self.vault     = None
         self.errz_proc = None
+        self.tool_executor = None
         self._init_subsystems()
 
     def _init_subsystems(self):
@@ -75,6 +76,15 @@ class PhoenixSystem:
             logger.info("✓ Vault online")
         except Exception as e:
             logger.warning(f"Vault unavailable: {e}")
+
+        # Tool registry + executor
+        try:
+            from src.tools import ToolExecutor, tool_count, list_phases
+            self.tool_executor = ToolExecutor()
+            logger.info(f"✓ Tool registry loaded — {tool_count()} tools across {len(list_phases())} phases")
+        except Exception as e:
+            self.tool_executor = None
+            logger.warning(f"Tool registry unavailable: {e}")
 
     def launch_errz(self) -> bool:
         """Launch ERR0RS ULTIMATE web UI as subprocess"""
@@ -113,6 +123,13 @@ class PhoenixSystem:
             status["wireless"] = self.wireless.get_status()
         if self.vault:
             status["vault"] = self.vault.get_vault_stats()
+        if self.tool_executor:
+            from src.tools import tool_count, list_phases
+            status["tools"] = {
+                "total_registered": tool_count(),
+                "phases": list_phases(),
+                "phase_count": len(list_phases()),
+            }
         return status
 
     def shutdown(self):

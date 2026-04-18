@@ -16,7 +16,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-VAULT_DIR = os.getenv("VAULT_DIR", "/opt/phoenix-vault")
+VAULT_DIR = os.getenv("VAULT_DIR", "/home/kali/phoenix-vault")
 KEY_FILE  = os.path.join(VAULT_DIR, ".vault.key")
 
 

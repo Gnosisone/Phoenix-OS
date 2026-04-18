@@ -151,7 +151,7 @@ def animated_boot():
     print(f"\n{ORANGE}{'═' * 60}{NC}")
     print(f"{GREEN}  ERR0RS ULTIMATE is ONLINE{NC}")
     print(f"{CYAN}  Web UI:  http://{ip}:8765{NC}")
-    print(f"{CYAN}  CLI:     python3 /opt/ERR0RS-Ultimate/main.py{NC}")
+    print(f"{CYAN}  CLI:     python3 /home/kali/ERR0RS-Ultimate/main.py{NC}")
     print(f"{ORANGE}{'═' * 60}{NC}")
     print(f"\n{DIM}  Born from the ashes of every failed boot.{NC}")
     print(f"  {ORANGE}PHOENIX OS{NC} — {DIM}Gnosisone/Phoenix-OS{NC}\n")
