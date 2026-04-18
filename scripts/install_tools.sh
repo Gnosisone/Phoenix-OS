@@ -7,7 +7,7 @@
 # Usage: sudo bash scripts/install_tools.sh
 # =============================================================================
 
-set -e
+set +e  # Never exit on error — log failures and continue installing
 ORANGE='\033[0;33m'; YELLOW='\033[1;33m'; RED='\033[0;31m'
 GREEN='\033[0;32m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 LOG="/var/log/phoenix-tools.log"
@@ -80,22 +80,15 @@ setup_repos() {
   log "Updating package lists..."
   apt update -qq 2>&1 | tail -1
 
-  # Add BlackArch repo
-  if ! grep -rq "blackarch" /etc/apt/sources.list* 2>/dev/null; then
-    log "Adding BlackArch repository..."
-    curl -fsSL https://blackarch.org/strap.sh -o /tmp/strap.sh 2>/dev/null && \
-      chmod +x /tmp/strap.sh && bash /tmp/strap.sh 2>&1 | tail -3 || \
-      warn "BlackArch bootstrap failed — continuing with Kali/Parrot repos"
-    rm -f /tmp/strap.sh
-  else
-    log "BlackArch repo already configured"
-  fi
+  # BlackArch note — strap.sh requires Arch/pacman, not compatible with Kali/Debian.
+  # All BlackArch-equivalent tools are available directly via Kali apt repos.
+  log "BlackArch tools: sourced via Kali apt (pacman-based strap.sh skipped on Debian)"
 
-  # Parrot tools repo (works on Debian-based)
-  if ! grep -rq "parrot" /etc/apt/sources.list* 2>/dev/null; then
-    log "Adding Parrot Security repo..."
-    wget -qO /etc/apt/trusted.gpg.d/parrot.gpg \
-      https://deb.parrot.sh/parrot/misc/parrot.gpg 2>/dev/null || true
+  # Kali full repo — ensure all tool categories are enabled
+  if ! grep -q "kali-rolling" /etc/apt/sources.list 2>/dev/null; then
+    log "Ensuring Kali rolling repo is active..."
+    echo "deb http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware" \
+      > /etc/apt/sources.list.d/kali-rolling.list
   fi
 
   apt update -qq 2>&1 | tail -1
