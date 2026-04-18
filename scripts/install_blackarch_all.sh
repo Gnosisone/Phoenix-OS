@@ -76,12 +76,20 @@ git_install() {
     local name="$1" url="$2"
     local dir="$OPT/$name"
     already_done "git:$name" && skip "$name" && return
+
+    # Convert any https://github.com URL to SSH (git@github.com) so we never
+    # get prompted for credentials. Dead/private repos will just fail fast.
+    url="${url/https:\/\/github.com\//git@github.com:}"
+
     if [ -d "$dir/.git" ]; then
-        cd "$dir" && git pull -q 2>/dev/null && ok "git:$name (updated)" || skip "$name"
+        cd "$dir" && GIT_TERMINAL_PROMPT=0 git pull -q 2>/dev/null \
+            && ok "git:$name (updated)" || skip "$name"
         return
     fi
     mkdir -p "$OPT"
-    if git clone --depth=1 "$url" "$dir" -q 2>/dev/null; then
+    if GIT_TERMINAL_PROMPT=0 \
+       GIT_SSH_COMMAND="ssh -i /home/kali/.ssh/id_ed25519 -o StrictHostKeyChecking=no -o BatchMode=yes" \
+       git clone --depth=1 "$url" "$dir" -q 2>/dev/null; then
         # Auto-setup: install requirements if present
         if [ -f "$dir/requirements.txt" ]; then
             pip3 install -r "$dir/requirements.txt" --break-system-packages -q 2>/dev/null || true
