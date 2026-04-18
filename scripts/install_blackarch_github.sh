@@ -1,62 +1,66 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Phoenix OS — BlackArch GitHub Mass Installer
+# Phoenix OS — BlackArch Authenticated Mass Installer
+# Uses GitHub token for HTTPS clones — no SSH agent needed, no prompts
 # Auto-generated from official BlackArch package database
-# Installs all 2,221 remaining tools not covered by apt/pip/go
 #
 # Usage: sudo bash scripts/install_blackarch_github.sh [--resume]
-# Resume: sudo bash scripts/install_blackarch_github.sh --resume
-# Log:    /var/log/phoenix-github.log
-# State:  /var/log/phoenix-github-state.txt
 # =============================================================================
 
 set +e
-GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'
-CYAN='\033[0;36m'; ORANGE='\033[0;33m'; NC='\033[0m'
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; ORANGE='\033[0;33m'; NC='\033[0m'
 LOG="/var/log/phoenix-github.log"
 STATE="/var/log/phoenix-github-state.txt"
 OPT="/opt/blackarch"
 PASS=0; FAIL=0; SKIP=0
 RESUME=false; [[ "$1" == "--resume" ]] && RESUME=true
 
+# Load GitHub token — required for authenticated HTTPS clones
+TOKEN_FILE="/home/kali/GITHUB PAT"
+if [ ! -f "$TOKEN_FILE" ]; then
+    echo "ERROR: GitHub PAT not found at $TOKEN_FILE"
+    echo "Create one at: https://github.com/settings/tokens"
+    exit 1
+fi
+GH_TOKEN=$(awk '{print $1}' "$TOKEN_FILE")
+
 log()  { echo -e "${GREEN}[+]${NC} $1" | tee -a "$LOG"; }
 ok()   { echo -e "  ${GREEN}✓${NC} $1"; ((PASS++)); echo "PASS:$1" >> "$STATE"; }
-fail() { echo -e "  ${YELLOW}✗${NC} $1 ($2)"; ((FAIL++)); }
-skip() { echo -e "  ${CYAN}~${NC} $1"; ((SKIP++)); }
-
+fail() { echo -e "  ${YELLOW}✗${NC} $1"; ((FAIL++)); }
+skip() { echo -e "  ${CYAN}~${NC} $1 (done)"; ((SKIP++)); }
 done_already() { $RESUME && grep -q "^PASS:$1$" "$STATE" 2>/dev/null; }
 
 g() {
     local name="$1" url="$2"
     local dir="$OPT/$name"
-    done_already "$name" && skip "$name (resume)" && return
-    [ -d "$dir/.git" ] && { cd "$dir" && GIT_TERMINAL_PROMPT=0 git pull -q 2>/dev/null && ok "$name (updated)" || skip "$name"; return; }
+
+    done_already "$name" && skip "$name" && return
+
+    # Already cloned — just update
+    if [ -d "$dir/.git" ]; then
+        cd "$dir" && GIT_TERMINAL_PROMPT=0 git pull -q 2>/dev/null \
+            && ok "$name (updated)" || skip "$name"
+        return
+    fi
+
+    # Use sed to inject token — more reliable than bash pattern substitution
+    local auth_url
+    auth_url=$(echo "$url" | sed "s|https://github.com/|https://${GH_TOKEN}@github.com/|")
+
     mkdir -p "$OPT"
-    if GIT_TERMINAL_PROMPT=0 \
-       GIT_SSH_COMMAND="ssh -i /home/kali/.ssh/id_ed25519 -o StrictHostKeyChecking=no -o BatchMode=yes" \
-       git clone --depth=1 "${url/https:\/\/github.com\//git@github.com:}" "$dir" -q 2>/dev/null; then
+    if GIT_TERMINAL_PROMPT=0 git clone --depth=1 "$auth_url" "$dir" -q 2>/dev/null; then
         [ -f "$dir/requirements.txt" ] && pip3 install -r "$dir/requirements.txt" --break-system-packages -q 2>/dev/null || true
         [ -f "$dir/setup.py" ] && cd "$dir" && pip3 install -e . --break-system-packages -q 2>/dev/null || true
         for e in "$dir/$name" "$dir/$name.py" "$dir/main.py" "$dir/$name.sh"; do
-            [ -f "$e" ] && { chmod +x "$e"; ln -sf "$e" "/usr/local/bin/$name" 2>/dev/null; break; }
+            if [ -f "$e" ]; then chmod +x "$e"; ln -sf "$e" "/usr/local/bin/$name" 2>/dev/null || true; break; fi
         done
         ok "$name"
     else
-        fail "$name" "clone failed"
+        fail "$name"
     fi
 }
 
-[ "$EUID" -ne 0 ] && { echo "Run as root: sudo bash $0"; exit 1; }
-mkdir -p "$OPT" && touch "$LOG"
-[[ "$RESUME" != "true" ]] && > "$STATE"
-
-echo -e "${ORANGE}"
-echo "  PHOENIX OS — BlackArch GitHub Mass Installer"
-echo "  ${#} args | Resume: $RESUME | Target: $OPT"
-echo "  Tools: 2221 | $(date)"
-echo -e "${NC}"
-
-# ── AUTO-GENERATED FROM BLACKARCH PACKAGE DATABASE ──
+# ── AUTO-GENERATED TOOL LIST ──────────────────────────────────────────────────
 g "0d1n" "https://github.com/CoolerVoid/0d1n"
 g "3proxy" "https://github.com/3proxy/3proxy"
 g "abcd" "https://github.com/MITRECND/abcd"
@@ -2283,14 +2287,13 @@ g "zulucrypt" "https://github.com/mhogomchungu/zuluCrypt"
 TOTAL=$((PASS + FAIL + SKIP))
 echo ""
 echo -e "${ORANGE}╔══════════════════════════════════════════════════════╗"
-echo -e "║    PHOENIX OS — GITHUB MASS CLONE COMPLETE          ║"
+echo -e "║    PHOENIX OS — BLACKARCH ARSENAL COMPLETE          ║"
 echo -e "╠══════════════════════════════════════════════════════╣"
 printf "║ ✓ Cloned:  %-42s║\n" "$PASS tools"
-printf "║ ~ Skipped: %-42s║\n" "$SKIP already present"
+printf "║ ~ Skipped: %-42s║\n" "$SKIP already present"  
 printf "║ ✗ Failed:  %-42s║\n" "$FAIL dead/private repos"
 printf "║   Total:   %-42s║\n" "$TOTAL processed"
 echo -e "╚══════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo "  Tools at: $OPT"
-echo "  Log: $LOG"
+echo "  Tools: $OPT | Log: $LOG"
 echo "  Born from the ashes of every failed boot. 🔥"
