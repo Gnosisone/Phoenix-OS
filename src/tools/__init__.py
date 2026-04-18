@@ -1,6 +1,6 @@
 """
 Phoenix OS — Tools Package
-Exposes the tool registry and executor to the rest of Phoenix OS.
+Exposes the tool registry, executor, and pre-built attack wrappers.
 """
 from .registry import (
     TOOL_REGISTRY,
@@ -13,6 +13,7 @@ from .registry import (
     get_tools_requiring_sudo,
 )
 from .executor import ToolExecutor
+from .wrappers import WRAPPER_MAP
 
 __all__ = [
     "TOOL_REGISTRY",
@@ -24,4 +25,5 @@ __all__ = [
     "tool_count",
     "get_tools_requiring_sudo",
     "ToolExecutor",
+    "WRAPPER_MAP",
 ]
