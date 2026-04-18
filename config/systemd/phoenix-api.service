@@ -1,0 +1,23 @@
+[Unit]
+Description=Phoenix OS FastAPI Tool Server
+Documentation=https://github.com/Gnosisone/Phoenix-OS
+After=network.target ollama.service
+
+[Service]
+Type=simple
+User=kali
+Group=kali
+WorkingDirectory=/home/kali/Phoenix-OS
+EnvironmentFile=/home/kali/Phoenix-OS/.env
+ExecStart=/usr/bin/python3 -m uvicorn src.core.api_server:app \
+    --host 0.0.0.0 \
+    --port 8767 \
+    --log-level warning
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=phoenix-api
+
+[Install]
+WantedBy=multi-user.target

@@ -107,6 +107,25 @@ class PhoenixSystem:
             logger.error(f"ERR0RS launch failed: {e}")
             return False
 
+    def launch_api(self) -> bool:
+        """Launch Phoenix OS FastAPI server on :8767"""
+        import subprocess
+        api_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "api_server.py")
+        api_port = int(os.getenv("PHOENIX_API_PORT", "8767"))
+        try:
+            proc = subprocess.Popen(
+                [sys.executable, "-m", "uvicorn",
+                 "src.core.api_server:app",
+                 "--host", "0.0.0.0",
+                 "--port", str(api_port),
+                 "--log-level", "warning"],
+            )
+            logger.info(f"✓ Phoenix API launched (PID {proc.pid}) — http://0.0.0.0:{api_port}")
+            return True
+        except Exception as e:
+            logger.warning(f"Phoenix API launch failed: {e}")
+            return False
+
     def get_status(self) -> dict:
         """Full system status snapshot"""
         status = {
