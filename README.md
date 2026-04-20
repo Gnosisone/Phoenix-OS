@@ -1,4 +1,4 @@
-# 🔥 at this point Phoenix OS has 1717 tools from both sudo and pacman repos all in one place and growing as we speak! 4/19/26 11:12am
+# 🔥 at this point Phoenix OS has 2172 tools from both sudo and pacman repos all in one place and growing as we speak! 4/19/26 11:12am
 
 **Phoenix OS** is the Raspberry Pi 5 field deployment build of the ERR0RS ULTIMATE penetration testing framework. Purpose-built for the Pi 5 16GB + Hailo-10H AI HAT+ hardware stack, Phoenix OS turns a $100 single-board computer into a professional-grade, AI-powered red team field unit.
 
